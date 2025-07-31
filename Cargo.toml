@@ -1,0 +1,21 @@
+[package]
+name = "hirust-macros"
+version = "0.1.0"
+edition = "2024"
+
+# Rust 宏系列教程—自定义属性宏 https://blog.csdn.net/neweastsun/article/details/144017995
+[lib]
+proc-macro = true
+name="macros"
+path = "src/lib.rs"
+
+[dependencies]
+quote = "1.0.40"
+# https://zjp-cn.github.io/rust-note/proc/syn.html
+syn = {version ="2.0.104", features = ["full", "parsing"] }
+serde_json = "1.0.134"
+auth = {path = "../auth"}
+zip = "4.2.0"
+dotenv_codegen = "0.15.0"
+proc-macro2 = "1.0.95"
+regex = "1.11.1"
