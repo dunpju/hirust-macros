@@ -14,8 +14,8 @@ quote = "1.0.40"
 # https://zjp-cn.github.io/rust-note/proc/syn.html
 syn = {version ="2.0.104", features = ["full", "parsing"] }
 serde_json = "1.0.134"
-auth = {path = "../auth"}
 zip = "4.2.0"
 dotenv_codegen = "0.15.0"
 proc-macro2 = "1.0.95"
 regex = "1.11.1"
+hirust-auth = "0.1.0"

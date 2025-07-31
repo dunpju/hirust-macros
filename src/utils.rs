@@ -5,6 +5,7 @@ use std::io;
 use std::io::Write;
 use std::path::Path;
 use zip::ZipArchive;
+use hirust_auth;
 
 #[allow(dead_code)]
 pub fn create_file(file_path: &str) {
@@ -149,7 +150,7 @@ pub fn parse_token(args: TokenStream, req_map: HashMap<String, String>) -> (Stri
         }
     }
 
-    let auth_info = auth::Auth {
+    let auth_info = hirust_auth::Auth {
         tag: tag.clone().replace("\"", ""),
         desc: desc.clone().replace("\"", ""),
         middlewares: middleware.clone().replace("\"", ""),

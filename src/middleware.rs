@@ -1,7 +1,6 @@
 use quote::quote;
 use syn::{parse_macro_input, parse_str, ItemFn};
 
-use auth;
 use proc_macro::{TokenStream, TokenTree};
 
 // 鉴权宏
@@ -71,7 +70,7 @@ pub(crate) fn middleware_impl(args: TokenStream, item: TokenStream) -> TokenStre
         tag = format!("{:?}", sig.ident.clone().to_string());
     }
 
-    let auth_info = auth::Auth {
+    let auth_info = hirust_auth::Auth {
         tag: tag.clone().replace("\"", ""),
         desc: desc.clone().replace("\"", ""),
         middlewares: handler.clone().replace("\"", ""),
