@@ -1,7 +1,10 @@
 [package]
 name = "hirust-macros"
+authors = ["dengpju"]
 version = "0.1.0"
 edition = "2024"
+description = "A Rust Macros"
+license = "MIT"
 
 # Rust 宏系列教程—自定义属性宏 https://blog.csdn.net/neweastsun/article/details/144017995
 [lib]
