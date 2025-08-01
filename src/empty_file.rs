@@ -4,8 +4,7 @@ use quote::quote;
 use std::collections::HashMap;
 use std::fs;
 use std::sync::Mutex;
-use hirust_auth::Auth;
-use syn::{ItemFn, parse_macro_input};
+use syn::{parse_macro_input, ItemFn};
 
 lazy_static! {
     static ref ROUTE_FILE: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
