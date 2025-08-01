@@ -10,6 +10,7 @@ mod get;
 mod put;
 mod delete;
 mod head;
+mod route_file;
 
 use auth_file::auth_file_impl;
 use empty_file::empty_file_impl;
@@ -23,12 +24,18 @@ use crate::get::get_impl;
 use crate::put::put_impl;
 use crate::delete::delete_impl;
 use crate::head::head_impl;
+use crate::route_file::route_file_impl;
 use crate::tag::tag_impl;
 
 
 #[proc_macro_attribute]
 pub fn empty_file(args: TokenStream, item: TokenStream) -> TokenStream {
     empty_file_impl(args, item)
+}
+
+#[proc_macro_attribute]
+pub fn router_file(args: TokenStream, item: TokenStream) -> TokenStream {
+    route_file_impl(args, item)
 }
 
 #[proc_macro_attribute]
