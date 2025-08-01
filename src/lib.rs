@@ -34,7 +34,7 @@ pub fn empty_file(args: TokenStream, item: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-pub fn router_file(args: TokenStream, item: TokenStream) -> TokenStream {
+pub fn route_file(args: TokenStream, item: TokenStream) -> TokenStream {
     route_file_impl(args, item)
 }
 
