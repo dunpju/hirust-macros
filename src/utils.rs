@@ -157,7 +157,8 @@ pub fn parse_token(args: TokenStream, req_map: HashMap<String, String>) -> (Stri
         auth,
     };
 
-    hirust_auth::insert(auth_info.clone());
+    let serialized = serde_json::to_string(&auth_info.clone()).unwrap();
+    create_and_append("./resources/route", &serialized.as_str());
 
     let mut contents = String::new();
     if !middlewares.is_empty() {
