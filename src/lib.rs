@@ -1,7 +1,6 @@
 extern crate proc_macro;
 #[macro_use]
 extern crate dotenv_codegen;
-mod middleware;
 mod empty_file;
 mod auth_file;
 mod utils;
@@ -16,7 +15,6 @@ mod head;
 
 use auth_file::auth_file_impl;
 use empty_file::empty_file_impl;
-use middleware::middleware_impl;
 use gen_dist::gen_dist_impl;
 use proc_macro::TokenStream;
 use quote::quote;
@@ -29,10 +27,6 @@ use crate::delete::delete_impl;
 use crate::head::head_impl;
 use crate::tag::tag_impl;
 
-#[proc_macro_attribute]
-pub fn middleware(args: TokenStream, item: TokenStream) -> TokenStream {
-    middleware_impl(args, item)
-}
 
 #[proc_macro_attribute]
 pub fn empty_file(args: TokenStream, item: TokenStream) -> TokenStream {
