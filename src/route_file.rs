@@ -11,7 +11,7 @@ lazy_static! {
 }
 
 #[allow(unused)]
-pub fn route_file() -> String {
+pub fn route_cfg() -> String {
     ROUTE_FILE.lock().unwrap().get("ROUTE").unwrap().clone()
 }
 
