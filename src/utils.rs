@@ -6,6 +6,7 @@ use std::io::Write;
 use std::path::Path;
 use zip::ZipArchive;
 use hirust_auth;
+use crate::empty_file::route_file;
 
 #[allow(dead_code)]
 pub fn create_file(file_path: &str) {
@@ -158,7 +159,7 @@ pub fn parse_token(args: TokenStream, req_map: HashMap<String, String>) -> (Stri
     };
 
     let serialized = serde_json::to_string(&auth_info.clone()).unwrap();
-    create_and_append("./resources/route", &serialized.as_str());
+    create_and_append(route_file().as_str(), &serialized.as_str());
 
     let mut contents = String::new();
     if !middlewares.is_empty() {

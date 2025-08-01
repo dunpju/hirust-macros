@@ -1,7 +1,19 @@
+use lazy_static::lazy_static;
 use proc_macro::{TokenStream, TokenTree};
 use quote::quote;
+use std::collections::HashMap;
 use std::fs;
-use syn::{parse_macro_input, ItemFn};
+use std::sync::Mutex;
+use hirust_auth::Auth;
+use syn::{ItemFn, parse_macro_input};
+
+lazy_static! {
+    static ref ROUTE_FILE: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
+}
+
+pub fn route_file() -> String {
+    ROUTE_FILE.lock().unwrap().get("ROUTE").unwrap().clone()
+}
 
 pub(crate) fn empty_file_impl(args: TokenStream, input: TokenStream) -> TokenStream {
     let mut is_filename = false;
@@ -14,6 +26,10 @@ pub(crate) fn empty_file_impl(args: TokenStream, input: TokenStream) -> TokenStr
             let temp = arg.to_string();
             filename = temp.clone().replace("\"", "");
             is_filename = false;
+            ROUTE_FILE
+                .lock()
+                .unwrap()
+                .insert("ROUTE".to_string(), filename.clone());
         }
     }
 
@@ -61,5 +77,5 @@ pub(crate) fn empty_file_impl(args: TokenStream, input: TokenStream) -> TokenStr
             return __result;
         }
     )
-        .into()
+    .into()
 }
