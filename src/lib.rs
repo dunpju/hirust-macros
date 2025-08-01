@@ -1,6 +1,4 @@
 extern crate proc_macro;
-#[macro_use]
-extern crate dotenv_codegen;
 mod empty_file;
 mod auth_file;
 mod utils;
