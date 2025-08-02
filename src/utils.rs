@@ -158,8 +158,15 @@ pub fn parse_token(args: TokenStream, req_map: HashMap<String, String>) -> (Stri
         auth,
     };
 
-    let serialized = serde_json::to_string(&auth_info.clone()).unwrap();
-    create_and_append(route_cfg().as_str(), &serialized.as_str());
+    match hirust_auth::exist(auth_info.clone().tag) {
+        Some(_) => {
+            panic!("This handler tag: {} is duplication", auth_info.clone().tag);
+        },
+        None => {
+            let serialized = serde_json::to_string(&auth_info.clone()).unwrap();
+            create_and_append(route_cfg().as_str(), &serialized.as_str());
+        }
+    }
 
     let mut contents = String::new();
     if !middlewares.is_empty() {
