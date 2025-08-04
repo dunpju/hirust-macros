@@ -110,6 +110,7 @@ pub fn parse_token(args: TokenStream, req_map: HashMap<String, String>) -> (Stri
         if is_path && matches!(&arg, TokenTree::Literal(_)) {
             let temp = arg.to_string();
             path = temp.clone().replace("\"", "");
+            is_path = false;
         }
         if matches!(&arg, TokenTree::Ident(_)) && "middleware".eq(&arg.to_string()) {
             is_middleware = true;
@@ -125,6 +126,7 @@ pub fn parse_token(args: TokenStream, req_map: HashMap<String, String>) -> (Stri
                 .split(",")
                 .map(|m| m.to_string().replace(" ", ""))
                 .collect();
+            is_middleware = false;
         }
         if matches!(&arg, TokenTree::Ident(_)) && "tag".eq(&arg.to_string()) {
             is_tag = true;
@@ -140,6 +142,7 @@ pub fn parse_token(args: TokenStream, req_map: HashMap<String, String>) -> (Stri
             if "false".eq(&arg.to_string()) {
                 auth = false;
             }
+            is_auth = false;
         }
         if matches!(&arg, TokenTree::Ident(_)) && "desc".eq(&arg.to_string()) {
             is_desc = true;
