@@ -24,12 +24,6 @@ pub(crate) fn auth_file_impl(args: TokenStream, item: TokenStream) -> TokenStrea
         println!("{}被删除", &filename.as_str())
     }
 
-    // 清空文件
-    // if let Ok(_file) = OpenOptions::new().write(true).truncate(true).open(&filename) {
-    //     // 文件被截断为空
-    //     println!("{}被清空", &filename.as_str())
-    // }
-
     // 创建文件
     utils::create_file(filename.as_str());
 

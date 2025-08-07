@@ -30,8 +30,10 @@ pub(crate) fn gen_dist_impl(args: TokenStream, input: TokenStream) -> TokenStrea
     }
     let filename = zip_filename.replace(".zip", "");
     if Path::new(&zip_filename).exists() {
-        // 删除dist目录
-        fs::remove_dir_all(&filename).expect(format!("{}清空失败", &filename).as_str());
+        if Path::new(&filename).exists() {
+            // 删除dist目录
+            fs::remove_dir_all(&filename).expect(format!("{}清空失败", &filename).as_str());
+        }
         println!("{}被清空", &filename);
     }
     // 解压dist.zip
