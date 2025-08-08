@@ -187,12 +187,13 @@ pub fn parse_token(args: TokenStream, req_map: HashMap<String, String>) -> (Stri
             // 调用拦截器
             let temp = format!(
                 r#"
-                match interceptor({}({})) {{
+                match interceptor({}(&{}, {})) {{
                     Some(response) => return response.respond_to(&{}),
                     _ => (),
                 }}
                 "#,
                 middleware,
+                req.clone().to_string(),
                 tag.clone().to_string(),
                 req.clone().to_string()
             );
