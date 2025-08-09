@@ -1,14 +1,11 @@
-use lazy_static::lazy_static;
 use proc_macro::{TokenStream, TokenTree};
 use quote::quote;
 use std::collections::HashMap;
 use std::fs;
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex};
 use syn::{parse_macro_input, ItemFn};
 
-lazy_static! {
-    static ref ROUTE_FILE: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
-}
+static ROUTE_FILE: LazyLock<Mutex<HashMap<String, String>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[allow(unused)]
 pub fn route_cfg() -> String {
