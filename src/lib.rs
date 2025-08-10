@@ -33,7 +33,6 @@ pub fn empty_file(args: TokenStream, item: TokenStream) -> TokenStream {
 
 #[proc_macro_attribute]
 pub fn route_file(args: TokenStream, item: TokenStream) -> TokenStream {
-    println!("file: {}, line: {}, message: {:?}", file!(), line!(), "route_file");
     route_file_impl(args, item)
 }
 

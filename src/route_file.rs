@@ -32,12 +32,6 @@ pub(crate) fn route_file_impl(args: TokenStream, input: TokenStream) -> TokenStr
             let temp = arg.to_string();
             filename = temp.clone().replace("\"", "");
             is_filename = false;
-            println!(
-                "file: {}, line: {}, message: {:?}",
-                file!(),
-                line!(),
-                filename.clone()
-            );
             ROUTE_FILE
                 .lock()
                 .unwrap()
