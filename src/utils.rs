@@ -1,3 +1,5 @@
+use crate::route_file::route_cfg;
+use hirust_auth;
 use proc_macro::{TokenStream, TokenTree};
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
@@ -5,8 +7,6 @@ use std::io;
 use std::io::Write;
 use std::path::Path;
 use zip::ZipArchive;
-use hirust_auth;
-use crate::route_file::route_cfg;
 
 #[allow(dead_code)]
 pub fn create_file(file_path: &str) {
@@ -164,7 +164,7 @@ pub fn parse_token(args: TokenStream, req_map: HashMap<String, String>) -> (Stri
     match hirust_auth::exist(auth_info.clone().tag) {
         Some(_) => {
             panic!("This handler tag: {} is duplication", auth_info.clone().tag);
-        },
+        }
         None => {
             let route_cfg = route_cfg();
             if route_cfg.is_empty() {
@@ -184,19 +184,24 @@ pub fn parse_token(args: TokenStream, req_map: HashMap<String, String>) -> (Stri
         let mut req = String::new();
 
         if req_map.contains_key("actix_web::HttpRequest") {
-            req = req_map.get("actix_web::HttpRequest").unwrap().to_string();
+            req = "&".to_owned() + &*req_map.get("actix_web::HttpRequest").unwrap().to_string();
         } else if req_map.contains_key("HttpRequest") {
-            req = req_map.get("HttpRequest").unwrap().to_string();
+            req = "&".to_owned() + &*req_map.get("HttpRequest").unwrap().to_string();
+        } else if req_map.contains_key("&HttpRequest") {
+            req = req_map.get("&HttpRequest").unwrap().to_string();
         } else {
-            panic!("There is no request parameter {} `actix_web::HttpRequest`", req);
+            panic!(
+                "There is no request parameter {} `actix_web::HttpRequest`",
+                req
+            );
         }
 
         for middleware in middlewares {
             // 调用拦截器
             let temp = format!(
                 r#"
-                match interceptor({}(&{}, {})) {{
-                    Some(response) => return response.respond_to(&{}),
+                match interceptor({}({}, {})) {{
+                    Some(response) => return response.respond_to({}),
                     _ => (),
                 }}
                 "#,
@@ -230,6 +235,7 @@ pub fn parse_group_extract_args(tokens: proc_macro2::TokenStream) -> HashMap<Str
 
                 // 获取组内的TokenStream并再次遍历
                 let inner_tokens = group.stream();
+                //println!("{}:{} {:?}", file!(), line!(), inner_tokens);
                 for inner_tt in inner_tokens {
                     match inner_tt {
                         // ref 模式 https://rustwiki.org/zh-CN/rust-by-example/scope/borrow/ref.html
@@ -271,6 +277,7 @@ pub fn parse_group_extract_args(tokens: proc_macro2::TokenStream) -> HashMap<Str
             _ => (), // 或者忽略非Group类型的TokenTree
         }
     }
+    //println!("{}:{} {:?}", file!(), line!(), args_map);
     args_map
 }
 

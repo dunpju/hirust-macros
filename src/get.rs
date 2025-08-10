@@ -18,7 +18,7 @@ pub(crate) fn get_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         // 其他属性
         mut attrs,
     } = input;
-
+    //println!("{}:{} {:?}", file!(), line!(), quote!(#sig).to_string());
     let tokens = quote!(#sig);
     let req_map = utils::parse_group_extract_args(tokens);
 
@@ -26,7 +26,7 @@ pub(crate) fn get_impl(args: TokenStream, input: TokenStream) -> TokenStream {
 
     // 将字符串解析为Rust代码片段
     let middleware_expr = parse_str::<syn::Expr>(contents.as_str()).unwrap();
-
+    //println!("{}:{} {:?}", file!(), line!(), quote!(#middleware_expr).to_string());
     let attr: Attribute = parse_quote! {
         #[actix_web::get(#path)]
     };
