@@ -3,13 +3,22 @@ use quote::quote;
 use std::collections::HashMap;
 use std::fs;
 use std::sync::{LazyLock, Mutex};
-use syn::{parse_macro_input, ItemFn};
+use syn::{ItemFn, parse_macro_input};
 
-static ROUTE_FILE: LazyLock<Mutex<HashMap<String, String>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+static ROUTE_FILE: LazyLock<Mutex<HashMap<String, String>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[allow(unused)]
 pub fn route_cfg() -> String {
-    ROUTE_FILE.lock().unwrap().get("ROUTE").unwrap().clone()
+    if let Some(filename) = ROUTE_FILE.lock().unwrap().get("ROUTE") {
+        filename.clone()
+    } else {
+        panic!(
+            "file: {}, line: {}, message: route config is empty, please check the route configuration path and compilation order.",
+            file!(),
+            line!()
+        );
+    }
 }
 
 pub(crate) fn route_file_impl(args: TokenStream, input: TokenStream) -> TokenStream {
@@ -23,6 +32,12 @@ pub(crate) fn route_file_impl(args: TokenStream, input: TokenStream) -> TokenStr
             let temp = arg.to_string();
             filename = temp.clone().replace("\"", "");
             is_filename = false;
+            println!(
+                "file: {}, line: {}, message: {:?}",
+                file!(),
+                line!(),
+                filename.clone()
+            );
             ROUTE_FILE
                 .lock()
                 .unwrap()

@@ -166,8 +166,16 @@ pub fn parse_token(args: TokenStream, req_map: HashMap<String, String>) -> (Stri
             panic!("This handler tag: {} is duplication", auth_info.clone().tag);
         },
         None => {
+            let route_cfg = route_cfg();
+            if route_cfg.is_empty() {
+                panic!(
+                    "file: {}, line: {}, message: route config is empty, please check the route configuration path and compilation order.",
+                    file!(),
+                    line!()
+                );
+            }
             let serialized = serde_json::to_string(&auth_info.clone()).unwrap();
-            create_and_append(route_cfg().as_str(), &serialized.as_str());
+            create_and_append(route_cfg.as_str(), &serialized.as_str());
         }
     }
 
