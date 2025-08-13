@@ -1,8 +1,7 @@
 use crate::utils;
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::Attribute;
-use syn::{parse_macro_input, parse_quote, parse_str, ItemFn};
+use syn::{parse_macro_input, ItemFn};
 
 pub(crate) fn delete_impl(args: TokenStream, input: TokenStream) -> TokenStream {
     // 解析输入作为ItemFn类型，它是syn 提供的表示函数类型
@@ -16,22 +15,22 @@ pub(crate) fn delete_impl(args: TokenStream, input: TokenStream) -> TokenStream 
         // 函数体
         block,
         // 其他属性
-        mut attrs,
+        attrs,
     } = input;
 
     let tokens = quote!(#sig);
     let req_map = utils::parse_group_extract_args(tokens);
     
-    let (path, contents) = utils::parse_token(args, req_map);
+    let (_path, _contents) = utils::parse_token(args, req_map);
 
     // 将字符串解析为Rust代码片段
-    let middleware_expr = parse_str::<syn::Expr>(contents.as_str()).unwrap();
+    //let middleware_expr = parse_str::<syn::Expr>(contents.as_str()).unwrap();
 
-    let attr: Attribute = parse_quote! {
-        #[actix_web::delete(#path)]
-    };
+    //let attr: Attribute = parse_quote! {
+    //    #[actix_web::delete(#path)]
+    //};
 
-    attrs.push(attr);
+    //attrs.push(attr);
 
     // 抽取函数体语句
     let statements = block.stmts;
@@ -42,7 +41,7 @@ pub(crate) fn delete_impl(args: TokenStream, input: TokenStream) -> TokenStream 
         #(#attrs)*
         // 重构函数声明
         #vis #sig {
-            #middleware_expr;
+            //#middleware_expr;
             let __result = {
                 #(#statements)*
             };

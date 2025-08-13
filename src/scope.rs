@@ -90,8 +90,11 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             } else {
                 for attr in &attrs {
+                    println!("{}:{} {:?}", file!(), line!(), quote! {#attr}.to_string());
                     // 函数属性
                     if re.is_match(quote! {#attr}.to_string().as_str()) {
+                        let auth_info = utils::parse_auth_info(quote! {#attr});
+                        println!("{}:{} {:?}", file!(), line!(), auth_info);
                         fn_name_list.push(fn_name.to_string());
                         break;
                     }
@@ -114,6 +117,7 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 // 将字符串转换成Stmt
                 let stmt = parse_str::<Stmt>(format!(
                     "let {} = {}.service({});",
+                    //"let {} = {}.service(web::resource("/info").app_data(hirust_auth::Auth{ tag: "test".to_string(), desc: "desc".to_string(), middlewares: "middlewares::auth::my_auth_middleware".to_string(), auth: false}).wrap(from_fn(middlewares::auth::my_auth_middleware)).to(info));",
                     scope_var_name, scope_var_name, fn_name
                 ).as_str())
                 .unwrap();
