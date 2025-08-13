@@ -253,6 +253,8 @@ pub fn parse_attr(args: TokenStream) -> hirust_auth::Auth {
 
 #[allow(unused)]
 pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
+    let mut is_method = false;
+    let mut method = String::new();
     let mut is_path = false;
     let mut path = String::new();
     let mut is_middleware = false;
@@ -276,6 +278,8 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
                         // ref 模式 https://rustwiki.org/zh-CN/rust-by-example/scope/borrow/ref.html
                         proc_macro2::TokenTree::Ident(ref ident) => {
                             println!("{}:{} {:?}", file!(), line!(), &ident);
+                            method = ident.clone().to_string().replace("\"", "");
+                            println!("{}:{} {}", file!(), line!(), method);
                         }
                         _ => {}
                     }
@@ -337,7 +341,7 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
     }
 
     let auth_info = hirust_auth::Auth {
-        method: path.clone().replace("\"", ""),
+        method: method.clone().replace("\"", ""),
         path: path.clone().replace("\"", ""),
         tag: tag.clone().replace("\"", ""),
         desc: desc.clone().replace("\"", ""),
