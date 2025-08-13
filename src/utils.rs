@@ -167,6 +167,8 @@ pub fn parse_token(args: TokenStream, req_map: HashMap<String, String>) -> (Stri
 
 #[allow(unused)]
 pub fn parse_attr(args: TokenStream) -> hirust_auth::Auth {
+    let mut is_method = false;
+    let mut method = String::new();
     let mut is_path = false;
     let mut path = String::new();
     let mut is_middleware = false;
@@ -180,6 +182,14 @@ pub fn parse_attr(args: TokenStream) -> hirust_auth::Auth {
     let mut desc = String::new();
     for arg in args.into_iter() {
         println!("{}:{} {:?}", file!(), line!(), &arg);
+        if matches!(&arg, TokenTree::Ident(_)) && "method".eq(&arg.to_string()) {
+            is_method = true;
+        }
+        if is_path && matches!(&arg, TokenTree::Literal(_)) {
+            let temp = arg.to_string();
+            method = temp.clone().replace("\"", "");
+            is_method = false;
+        }
         if matches!(&arg, TokenTree::Ident(_)) && "path".eq(&arg.to_string()) {
             is_path = true;
         }
@@ -231,6 +241,7 @@ pub fn parse_attr(args: TokenStream) -> hirust_auth::Auth {
     }
 
     hirust_auth::Auth {
+        method: method.clone().replace("\"", ""),
         path: path.clone().replace("\"", ""),
         tag: tag.clone().replace("\"", ""),
         desc: desc.clone().replace("\"", ""),
@@ -326,6 +337,7 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
     }
 
     let auth_info = hirust_auth::Auth {
+        method: path.clone().replace("\"", ""),
         path: path.clone().replace("\"", ""),
         tag: tag.clone().replace("\"", ""),
         desc: desc.clone().replace("\"", ""),
