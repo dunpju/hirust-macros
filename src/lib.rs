@@ -1,30 +1,49 @@
 extern crate proc_macro;
-mod empty_file;
 mod auth_file;
-mod utils;
-mod scope;
-mod gen_dist;
-mod post;
-mod tag;
-mod get;
-mod put;
 mod delete;
+mod empty_file;
+mod gen_dist;
+mod get;
 mod head;
+mod post;
+mod put;
 mod route_file;
+mod scope;
+mod tag;
+mod utils;
 
+use crate::delete::delete_impl;
+use crate::get::get_impl;
+use crate::head::head_impl;
+use crate::post::post_impl;
+use crate::put::put_impl;
+use crate::route_file::route_file_impl;
+use crate::tag::tag_impl;
 use auth_file::auth_file_impl;
 use empty_file::empty_file_impl;
 use gen_dist::gen_dist_impl;
 use proc_macro::TokenStream;
 use scope::scope_impl;
-use crate::post::post_impl;
-use crate::get::get_impl;
-use crate::put::put_impl;
-use crate::delete::delete_impl;
-use crate::head::head_impl;
-use crate::route_file::route_file_impl;
-use crate::tag::tag_impl;
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use quote::quote;
+    use syn::{parse_quote, Attribute};
+
+    // cargo test run -- --show-output
+    #[test]
+    fn run() {
+        //let s = r#"#[post(path = "/post", tag = "controllers::test1::post", middleware = {middlewares::auth::auth}, desc = "post")]"#;
+        let attr: Attribute = parse_quote! {
+          #[post(path = "/post", tag = "controllers::test1::post", middleware = {middlewares::auth::auth}, desc = "post" auth = false)]
+        };
+        println!("{:?}", attr);
+        println!("{:?}", quote! {#attr});
+        let auth_info = utils::parse_auth_info(quote! {#attr});
+        println!("{:?}", auth_info);
+    }
+}
 
 #[proc_macro_attribute]
 pub fn empty_file(args: TokenStream, item: TokenStream) -> TokenStream {

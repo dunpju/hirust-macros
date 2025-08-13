@@ -1,6 +1,6 @@
 use crate::route_file::route_cfg;
 use hirust_auth;
-use proc_macro::{TokenStream};
+use proc_macro::{TokenStream, TokenTree};
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
 use std::io;
@@ -166,6 +166,81 @@ pub fn parse_token(args: TokenStream, req_map: HashMap<String, String>) -> (Stri
 }
 
 #[allow(unused)]
+pub fn parse_attr(args: TokenStream) -> hirust_auth::Auth {
+    let mut is_path = false;
+    let mut path = String::new();
+    let mut is_middleware = false;
+    let mut middlewares: Vec<String> = vec![];
+    let mut middleware = String::new();
+    let mut is_tag = false;
+    let mut tag = String::new();
+    let mut is_auth = false;
+    let mut auth = true;
+    let mut is_desc = false;
+    let mut desc = String::new();
+    for arg in args.into_iter() {
+        println!("{}:{} {:?}", file!(), line!(), &arg);
+        if matches!(&arg, TokenTree::Ident(_)) && "path".eq(&arg.to_string()) {
+            is_path = true;
+        }
+        if is_path && matches!(&arg, TokenTree::Literal(_)) {
+            let temp = arg.to_string();
+            path = temp.clone().replace("\"", "");
+            is_path = false;
+        }
+        if matches!(&arg, TokenTree::Ident(_)) && "middleware".eq(&arg.to_string()) {
+            is_middleware = true;
+        }
+        if is_middleware && matches!(&arg, TokenTree::Group(_)) {
+            middleware = arg.to_string();
+            middleware = middleware
+                .clone()
+                .replace("{", "")
+                .replace("}", "")
+                .replace(" ", "");
+            middlewares = middleware
+                .split(",")
+                .map(|m| m.to_string().replace(" ", ""))
+                .collect();
+            is_middleware = false;
+        }
+        if matches!(&arg, TokenTree::Ident(_)) && "tag".eq(&arg.to_string()) {
+            is_tag = true;
+        }
+        if is_tag && matches!(&arg, TokenTree::Literal(_)) {
+            tag = arg.clone().to_string();
+            is_tag = false
+        }
+        if matches!(&arg, TokenTree::Ident(_)) && "auth".eq(&arg.to_string()) {
+            is_auth = true;
+        }
+        if is_auth && !"auth".eq(&arg.to_string()) && matches!(&arg, TokenTree::Ident(_)) {
+            if "false".eq(&arg.to_string()) {
+                auth = false;
+            }
+            is_auth = false;
+        }
+        if matches!(&arg, TokenTree::Ident(_)) && "desc".eq(&arg.to_string()) {
+            is_desc = true;
+        }
+        if is_desc && matches!(&arg, TokenTree::Literal(_)) {
+            let temp = arg.to_string(); // rust 如何把代码块里的字符串拿到代码块外面来
+            desc = temp.replace("\"", "");
+            is_desc = false;
+        }
+    }
+
+    hirust_auth::Auth {
+        path: path.clone().replace("\"", ""),
+        tag: tag.clone().replace("\"", ""),
+        desc: desc.clone().replace("\"", ""),
+        middlewares: middleware.clone().replace("\"", ""),
+        auth,
+    }
+    .clone()
+}
+
+#[allow(unused)]
 pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
     let mut is_path = false;
     let mut path = String::new();
@@ -214,7 +289,10 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
         if matches!(&arg, proc_macro2::TokenTree::Ident(_)) && "auth".eq(&arg.to_string()) {
             is_auth = true;
         }
-        if is_auth && !"auth".eq(&arg.to_string()) && matches!(&arg, proc_macro2::TokenTree::Ident(_)) {
+        if is_auth
+            && !"auth".eq(&arg.to_string())
+            && matches!(&arg, proc_macro2::TokenTree::Ident(_))
+        {
             if "false".eq(&arg.to_string()) {
                 auth = false;
             }
