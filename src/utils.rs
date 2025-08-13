@@ -254,7 +254,24 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
     let mut is_desc = false;
     let mut desc = String::new();
     for arg in args.into_iter() {
-        println!("{}:{} {:?}", file!(), line!(), &arg);
+        match arg {
+            // 遍历TokenTree::Group下的TokenStream
+            proc_macro2::TokenTree::Group(ref group) => {
+                println!("{}:{} {:?}", file!(), line!(), &group);
+                // 获取组内的TokenStream并再次遍历
+                let group_tokens = group.stream();
+                for inner_tt in group_tokens {
+                    match inner_tt {
+                        // ref 模式 https://rustwiki.org/zh-CN/rust-by-example/scope/borrow/ref.html
+                        proc_macro2::TokenTree::Ident(ref ident) => {
+                            println!("{}:{} {:?}", file!(), line!(), &ident);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
+        }
         if matches!(&arg, proc_macro2::TokenTree::Ident(_)) && "path".eq(&arg.to_string()) {
             is_path = true;
         }
