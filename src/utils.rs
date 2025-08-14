@@ -1,6 +1,7 @@
 use crate::route_file::route_cfg;
 use hirust_auth;
 use proc_macro::{TokenStream, TokenTree};
+use serde_json::Value;
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
 use std::io;
@@ -266,6 +267,20 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
     let mut auth = true;
     let mut is_desc = false;
     let mut desc = String::new();
+
+    let serialized = serde_json::to_string(&hirust_auth::Auth::default())
+        .expect("struct Auth serialization failed");
+    println!("{}:{} {:?}", file!(), line!(), &serialized);
+
+    // 解析JSON字符串到Value枚举
+    let json_value: Value = serde_json::from_str(&serialized).expect("JSON was not well-formatted");
+
+    // 将Value转换为HashMap<String, Value>
+    let attr_map: HashMap<String, Value> =
+        serde_json::from_value(json_value).expect("JSON was not well-formatted");
+    let mut keys: Vec<String> = vec![];
+    let mut values: Vec<String> = vec![];
+
     for arg in args.into_iter() {
         match arg {
             // 遍历TokenTree::Group下的TokenStream
@@ -289,17 +304,33 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
                                 match inner_group {
                                     proc_macro2::TokenTree::Ident(ref ident) => {
                                         println!("{}:{} {}", file!(), line!(), &ident.to_string());
+                                        if attr_map.contains_key(&ident.to_string()) {
+                                            keys.push(ident.to_string());
+                                        } else {
+                                            values.push(ident.to_string().replace("\"", ""));
+                                        }
                                     }
                                     proc_macro2::TokenTree::Literal(ref literal) => {
-                                        println!("{}:{} {}", file!(), line!(), &literal.to_string());
+                                        println!(
+                                            "{}:{} {}",
+                                            file!(),
+                                            line!(),
+                                            &literal.to_string()
+                                        );
+                                        values.push(literal.to_string().replace("\"", ""));
                                     }
                                     proc_macro2::TokenTree::Group(ref group) => {
                                         // 获取组内的TokenStream并再次遍历
                                         let group_tokens = group.stream();
-                                        println!("{}:{} {}", file!(), line!(), &group_tokens.to_string());
-                                        for inner_group in group_tokens {
-
-                                        }
+                                        println!(
+                                            "{}:{} {}",
+                                            file!(),
+                                            line!(),
+                                            &group_tokens.to_string().replace(" ", "")
+                                        );
+                                        values.push(
+                                            group_tokens.to_string().replace(" ", "").to_string(),
+                                        );
                                     }
                                     _ => {}
                                 }
@@ -311,58 +342,26 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
             }
             _ => {}
         }
-        if matches!(&arg, proc_macro2::TokenTree::Ident(_)) && "path".eq(&arg.to_string()) {
-            is_path = true;
-        }
-        if is_path && matches!(&arg, proc_macro2::TokenTree::Literal(_)) {
-            let temp = arg.to_string();
-            path = temp.clone().replace("\"", "");
-            is_path = false;
-        }
-        if matches!(&arg, proc_macro2::TokenTree::Ident(_)) && "middleware".eq(&arg.to_string()) {
-            is_middleware = true;
-        }
-        if is_middleware && matches!(&arg, proc_macro2::TokenTree::Group(_)) {
-            middleware = arg.to_string();
-            middleware = middleware
-                .clone()
-                .replace("{", "")
-                .replace("}", "")
-                .replace(" ", "");
-            middlewares = middleware
-                .split(",")
-                .map(|m| m.to_string().replace(" ", ""))
-                .collect();
-            is_middleware = false;
-        }
-        if matches!(&arg, proc_macro2::TokenTree::Ident(_)) && "tag".eq(&arg.to_string()) {
-            is_tag = true;
-        }
-        if is_tag && matches!(&arg, proc_macro2::TokenTree::Literal(_)) {
-            tag = arg.clone().to_string();
-            is_tag = false
-        }
-        if matches!(&arg, proc_macro2::TokenTree::Ident(_)) && "auth".eq(&arg.to_string()) {
-            is_auth = true;
-        }
-        if is_auth
-            && !"auth".eq(&arg.to_string())
-            && matches!(&arg, proc_macro2::TokenTree::Ident(_))
-        {
-            if "false".eq(&arg.to_string()) {
-                auth = false;
-            }
-            is_auth = false;
-        }
-        if matches!(&arg, proc_macro2::TokenTree::Ident(_)) && "desc".eq(&arg.to_string()) {
-            is_desc = true;
-        }
-        if is_desc && matches!(&arg, proc_macro2::TokenTree::Literal(_)) {
-            let temp = arg.to_string(); // rust 如何把代码块里的字符串拿到代码块外面来
-            desc = temp.replace("\"", "");
-            is_desc = false;
-        }
     }
+
+    println!("{}:{} {:?}", file!(), line!(), &keys);
+    println!("{}:{} {:?}", file!(), line!(), &values);
+
+    let mut attr_map: HashMap<String, String> = HashMap::new();
+    attr_map.insert("method".to_string(), method.to_string());
+    for index in 0..keys.len() {
+        attr_map.insert(keys[index].to_string(), values[index].to_string());
+    }
+
+    println!("{}:{} {:?}", file!(), line!(), &attr_map);
+
+    let serialized = serde_json::to_string(&attr_map).expect("attr_map serialization failed");
+    println!("{}:{} {:?}", file!(), line!(), &serialized);
+
+    // 解析JSON字符串到Value枚举
+    let json_value: hirust_auth::Auth =
+        serde_json::from_str(&serialized).expect("JSON was not well-formatted");
+    println!("{}:{} {:?}", file!(), line!(), &json_value);
 
     let auth_info = hirust_auth::Auth {
         method: method.clone().replace("\"", ""),

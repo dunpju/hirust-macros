@@ -36,7 +36,7 @@ mod tests {
     fn run() {
         //let s = r#"#[post(path = "/post", tag = "controllers::test1::post", middleware = {middlewares::auth::auth}, desc = "post")]"#;
         let attr: Attribute = parse_quote! {
-          #[post(path = "/post", tag = "controllers::test1::post", middleware = {middlewares::auth::auth,middlewares::auth::auth1}, desc = "post" auth = false)]
+          #[post(path = "/post", tag = "controllers::test1::post", middlewares = {middlewares::auth::auth,middlewares::auth::auth1}, desc = "post" auth = false)]
         };
         println!("{:?}", attr);
         println!("{:?}", quote! {#attr});
