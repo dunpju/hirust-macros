@@ -293,6 +293,14 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
                                     proc_macro2::TokenTree::Literal(ref literal) => {
                                         println!("{}:{} {}", file!(), line!(), &literal.to_string());
                                     }
+                                    proc_macro2::TokenTree::Group(ref group) => {
+                                        // 获取组内的TokenStream并再次遍历
+                                        let group_tokens = group.stream();
+                                        println!("{}:{} {}", file!(), line!(), &group_tokens.to_string());
+                                        for inner_group in group_tokens {
+
+                                        }
+                                    }
                                     _ => {}
                                 }
                             }
