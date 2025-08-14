@@ -256,17 +256,6 @@ pub fn parse_attr(args: TokenStream) -> hirust_auth::Auth {
 pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
     let mut is_method = false;
     let mut method = String::new();
-    let mut is_path = false;
-    let mut path = String::new();
-    let mut is_middleware = false;
-    let mut middlewares: Vec<String> = vec![];
-    let mut middleware = String::new();
-    let mut is_tag = false;
-    let mut tag = String::new();
-    let mut is_auth = false;
-    let mut auth = true;
-    let mut is_desc = false;
-    let mut desc = String::new();
 
     let serialized = serde_json::to_string(&hirust_auth::Auth::default())
         .expect("struct Auth serialization failed");
@@ -276,7 +265,7 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
     let json_value: Value = serde_json::from_str(&serialized).expect("JSON was not well-formatted");
 
     // 将Value转换为HashMap<String, Value>
-    let attr_map: HashMap<String, Value> =
+    let auth_keys_map: HashMap<String, Value> =
         serde_json::from_value(json_value).expect("JSON was not well-formatted");
     let mut keys: Vec<String> = vec![];
     let mut values: Vec<String> = vec![];
@@ -303,7 +292,7 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
                                 match inner_group {
                                     proc_macro2::TokenTree::Ident(ref ident) => {
                                         //println!("{}:{} {}", file!(), line!(), &ident.to_string());
-                                        if attr_map.contains_key(&ident.to_string()) {
+                                        if auth_keys_map.contains_key(&ident.to_string()) {
                                             keys.push(ident.to_string());
                                         } else {
                                             values.push(ident.to_string().replace("\"", ""));
@@ -340,10 +329,30 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
         attr_map.insert(keys[index].to_string(), values[index].to_string());
     }
 
-    //println!("{}:{} {:?}", file!(), line!(), &attr_map);
+    let mut auth_map: HashMap<String, String> = HashMap::new();
+    for (key, value) in auth_keys_map {
+        if attr_map.contains_key(key.as_str()) {
+            auth_map.insert(key.clone(), attr_map.get(&key).unwrap().to_string());
+        } else {
+            if key.clone().eq("auth") {
+                auth_map.insert(key.clone(), "true".to_string());
+            } else {
+                auth_map.insert(key.clone(), String::new());
+            }
+        }
+    }
 
-    let serialized = serde_json::to_string(&attr_map).expect("attr_map serialization failed");
-    //println!("{}:{} {}", file!(), line!(), &serialized);
+    if auth_map.get("path").unwrap().is_empty() {
+        panic!("path cannot be empty.");
+    }
+    if auth_map.get("tag").unwrap().is_empty() {
+        panic!("tag cannot be empty.");
+    }
+
+    //println!("{}:{} {:?}", file!(), line!(), &auth_map);
+
+    let serialized = serde_json::to_string(&auth_map).expect("attr_map serialization failed");
+    println!("{}:{} {}", file!(), line!(), &serialized);
 
     // 解析JSON字符串到Value枚举
     let auth_info: hirust_auth::Auth =
