@@ -100,7 +100,7 @@ pub fn parse_token(args: TokenStream, req_map: HashMap<String, String>) -> (Stri
 
     let middlewares: Vec<String> = auth_info
         .clone()
-        .middlewares
+        .middleware
         .clone()
         .split(",")
         .map(|m| m.to_string().replace(" ", ""))
@@ -246,7 +246,7 @@ pub fn parse_attr(args: TokenStream) -> hirust_auth::Auth {
         path: path.clone().replace("\"", ""),
         tag: tag.clone().replace("\"", ""),
         desc: desc.clone().replace("\"", ""),
-        middlewares: middleware.clone().replace("\"", ""),
+        middleware: middleware.clone().replace("\"", ""),
         auth: auth.to_string(),
     }
     .clone()
