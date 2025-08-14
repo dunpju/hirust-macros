@@ -254,7 +254,7 @@ pub fn parse_attr(args: TokenStream) -> hirust_auth::Auth {
 
 #[allow(unused)]
 pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
-    let mut is_method = false;
+    println!("{}:{} {:?}", file!(), line!(), &args);
     let mut method = String::new();
 
     let serialized = serde_json::to_string(&hirust_auth::Auth::default())
@@ -352,7 +352,7 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
     //println!("{}:{} {:?}", file!(), line!(), &auth_map);
 
     let serialized = serde_json::to_string(&auth_map).expect("attr_map serialization failed");
-    println!("{}:{} {}", file!(), line!(), &serialized);
+    //println!("{}:{} {}", file!(), line!(), &serialized);
 
     // 解析JSON字符串到Value枚举
     let auth_info: hirust_auth::Auth =

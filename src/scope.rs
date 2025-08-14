@@ -2,8 +2,9 @@ use crate::utils;
 use proc_macro::{TokenStream, TokenTree};
 use quote::quote;
 use regex::Regex;
+use std::collections::HashMap;
 use std::fs;
-use syn::{parse_file, parse_macro_input, parse_str, File, Item, ItemFn, Stmt};
+use syn::{File, Item, ItemFn, Stmt, parse_file, parse_macro_input, parse_str, Attribute, parse_quote};
 
 pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
     // 解析输入作为ItemFn类型，它是syn 提供的表示函数类型
@@ -36,11 +37,11 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
     }
 
     let mut fn_name_list: Vec<String> = vec![];
+    let mut auth_info_map: HashMap<String, hirust_auth::Auth> = HashMap::new();
     let mut scope_var_name = String::new();
 
     // 正则表达式模式
-    let patterns =
-        r"(\#\s*\[\s*post)|(\#\s*\[\s*macros\s*::\s*post)|(\#\s*\[\s*get)|(\#\s*\[\s*macros\s*::\s*get)|(\#\s*\[\s*put)|(\#\s*\[\s*macros\s*::\s*put)|(\#\s*\[\s*delete)|(\#\s*\[\s*macros\s*::\s*delete)|(\#\s*\[\s*head)|(\#\s*\[\s*macros\s*::\s*head)";
+    let patterns = r"(\#\s*\[\s*post)|(\#\s*\[\s*macros\s*::\s*post)|(\#\s*\[\s*get)|(\#\s*\[\s*macros\s*::\s*get)|(\#\s*\[\s*put)|(\#\s*\[\s*macros\s*::\s*put)|(\#\s*\[\s*delete)|(\#\s*\[\s*macros\s*::\s*delete)|(\#\s*\[\s*head)|(\#\s*\[\s*macros\s*::\s*head)";
     let re = Regex::new(patterns).unwrap(); // 创建正则表达式对象
 
     let content = fs::read_to_string(file).expect("Should have been able to read the file");
@@ -90,11 +91,12 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             } else {
                 for attr in &attrs {
-                    println!("{}:{} {:?}", file!(), line!(), quote! {#attr}.to_string());
                     // 函数属性
                     if re.is_match(quote! {#attr}.to_string().as_str()) {
+                        println!("{}:{} {:?}", file!(), line!(), quote! {#attr}.to_string());
                         let auth_info = utils::parse_auth_info(quote! {#attr});
-                        println!("{}:{} {:?}", file!(), line!(), auth_info);
+                        //println!("{}:{} {:?}", file!(), line!(), auth_info);
+                        auth_info_map.insert(fn_name.clone().to_string(), auth_info.clone());
                         fn_name_list.push(fn_name.to_string());
                         break;
                     }
@@ -114,12 +116,33 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
         if i == statements_len - 2 {
             for fn_name in fn_name_list.clone() {
                 let fn_name = fn_name.replace("\"", "");
+                let auth_info = auth_info_map.get(&fn_name).unwrap();
+                println!("{}:{} {:?}", file!(), line!(), auth_info.clone());
+                let auth_info_serialized = serde_json::to_string(&auth_info).expect("auth_info serialization failed");
+                // println!("{}", format!(
+                //     "let {} = {}.service(web::resource({}).app_data(hirust_auth::Auth{}).wrap(from_fn({})).route(web::{}().to({})));",
+                //     scope_var_name,
+                //     scope_var_name,
+                //     auth_info.path,
+                //     auth_info_serialized,
+                //     auth_info.middleware,
+                //     auth_info.method,
+                //     fn_name
+                // ).as_str());
                 // 将字符串转换成Stmt
-                let stmt = parse_str::<Stmt>(format!(
-                    "let {} = {}.service({});",
-                    //"let scope = scope.service(web::resource("/info").app_data(hirust_auth::Auth{ tag: "test".to_string(), desc: "desc".to_string(), middlewares: "middlewares::auth::my_auth_middleware".to_string(), auth: false}).wrap(from_fn(middlewares::auth::my_auth_middleware)).route(web::post().to(info)));",
-                    scope_var_name, scope_var_name, fn_name
-                ).as_str())
+                let stmt = parse_str::<Stmt>(
+                    format!(
+                        "let {} = {}.service(web::resource({}).app_data(hirust_auth::Auth{}).wrap(from_fn({})).route(web::{}().to({})));",
+                        scope_var_name,
+                        scope_var_name,
+                        auth_info.path,
+                        auth_info_serialized,
+                        auth_info.middleware,
+                        auth_info.method,
+                        fn_name
+                    )
+                    .as_str(),
+                )
                 .unwrap();
                 new_statements.push(stmt.clone());
             }
