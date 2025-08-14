@@ -247,7 +247,7 @@ pub fn parse_attr(args: TokenStream) -> hirust_auth::Auth {
         tag: tag.clone().replace("\"", ""),
         desc: desc.clone().replace("\"", ""),
         middlewares: middleware.clone().replace("\"", ""),
-        auth,
+        auth: auth.to_string(),
     }
     .clone()
 }
@@ -270,7 +270,7 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
 
     let serialized = serde_json::to_string(&hirust_auth::Auth::default())
         .expect("struct Auth serialization failed");
-    println!("{}:{} {:?}", file!(), line!(), &serialized);
+    //println!("{}:{} {:?}", file!(), line!(), &serialized);
 
     // 解析JSON字符串到Value枚举
     let json_value: Value = serde_json::from_str(&serialized).expect("JSON was not well-formatted");
@@ -285,25 +285,24 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
         match arg {
             // 遍历TokenTree::Group下的TokenStream
             proc_macro2::TokenTree::Group(ref group) => {
-                println!("{}:{} {:?}", file!(), line!(), &group);
+                //println!("{}:{} {:?}", file!(), line!(), &group);
                 // 获取组内的TokenStream并再次遍历
                 let group_tokens = group.stream();
                 for inner_group in group_tokens {
                     match inner_group {
                         // ref 模式 https://rustwiki.org/zh-CN/rust-by-example/scope/borrow/ref.html
                         proc_macro2::TokenTree::Ident(ref ident) => {
-                            println!("{}:{} {:?}", file!(), line!(), &ident);
+                            //println!("{}:{} {:?}", file!(), line!(), &ident);
                             method = ident.clone().to_string().replace("\"", "");
-                            println!("{}:{} {}", file!(), line!(), method);
                         }
                         proc_macro2::TokenTree::Group(ref group) => {
-                            println!("{}:{} {:?}", file!(), line!(), &group);
+                            //println!("{}:{} {:?}", file!(), line!(), &group);
                             // 获取组内的TokenStream并再次遍历
                             let group_tokens = group.stream();
                             for inner_group in group_tokens {
                                 match inner_group {
                                     proc_macro2::TokenTree::Ident(ref ident) => {
-                                        println!("{}:{} {}", file!(), line!(), &ident.to_string());
+                                        //println!("{}:{} {}", file!(), line!(), &ident.to_string());
                                         if attr_map.contains_key(&ident.to_string()) {
                                             keys.push(ident.to_string());
                                         } else {
@@ -311,23 +310,11 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
                                         }
                                     }
                                     proc_macro2::TokenTree::Literal(ref literal) => {
-                                        println!(
-                                            "{}:{} {}",
-                                            file!(),
-                                            line!(),
-                                            &literal.to_string()
-                                        );
                                         values.push(literal.to_string().replace("\"", ""));
                                     }
                                     proc_macro2::TokenTree::Group(ref group) => {
                                         // 获取组内的TokenStream并再次遍历
                                         let group_tokens = group.stream();
-                                        println!(
-                                            "{}:{} {}",
-                                            file!(),
-                                            line!(),
-                                            &group_tokens.to_string().replace(" ", "")
-                                        );
                                         values.push(
                                             group_tokens.to_string().replace(" ", "").to_string(),
                                         );
@@ -344,8 +331,8 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
         }
     }
 
-    println!("{}:{} {:?}", file!(), line!(), &keys);
-    println!("{}:{} {:?}", file!(), line!(), &values);
+    //println!("{}:{} {:?}", file!(), line!(), &keys);
+    //println!("{}:{} {:?}", file!(), line!(), &values);
 
     let mut attr_map: HashMap<String, String> = HashMap::new();
     attr_map.insert("method".to_string(), method.to_string());
@@ -353,24 +340,15 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
         attr_map.insert(keys[index].to_string(), values[index].to_string());
     }
 
-    println!("{}:{} {:?}", file!(), line!(), &attr_map);
+    //println!("{}:{} {:?}", file!(), line!(), &attr_map);
 
     let serialized = serde_json::to_string(&attr_map).expect("attr_map serialization failed");
-    println!("{}:{} {:?}", file!(), line!(), &serialized);
+    //println!("{}:{} {}", file!(), line!(), &serialized);
 
     // 解析JSON字符串到Value枚举
-    let json_value: hirust_auth::Auth =
+    let auth_info: hirust_auth::Auth =
         serde_json::from_str(&serialized).expect("JSON was not well-formatted");
-    println!("{}:{} {:?}", file!(), line!(), &json_value);
-
-    let auth_info = hirust_auth::Auth {
-        method: method.clone().replace("\"", ""),
-        path: path.clone().replace("\"", ""),
-        tag: tag.clone().replace("\"", ""),
-        desc: desc.clone().replace("\"", ""),
-        middlewares: middleware.clone().replace("\"", ""),
-        auth,
-    };
+    //println!("{}:{} {:?}", file!(), line!(), &auth_info);
 
     auth_info.clone()
 }
