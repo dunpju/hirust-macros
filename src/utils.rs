@@ -290,6 +290,9 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
                                     proc_macro2::TokenTree::Ident(ref ident) => {
                                         println!("{}:{} {}", file!(), line!(), &ident.to_string());
                                     }
+                                    proc_macro2::TokenTree::Literal(ref literal) => {
+                                        println!("{}:{} {}", file!(), line!(), &literal.to_string());
+                                    }
                                     _ => {}
                                 }
                             }
