@@ -142,8 +142,7 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 let auth_info_serialized = serde_json::to_string(&auth_info.clone()).expect("auth_info serialization failed");
                 let mut format_str = String::new();
                 if auth_info.clone().middleware.is_empty() {
-                    format_str = format!(
-                        "let {} = {}.service(web::resource(\"{}\").app_data(r#\"{}\"#.to_string()).route(web::{}().to({})));",
+                    format_str = format!("let {} = {}.service(web::resource(\"{}\").app_data(r#\"{}\"#.to_string()).route(web::{}().to({})));",
                         scope_var_name,
                         scope_var_name,
                         auth_info.path,
