@@ -107,7 +107,7 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let tag = file_path + &fn_name.clone().to_string();
                             auth_info.tag = tag;
                         }
-                        println!("{}:{} {:?}", file!(), line!(), auth_info);
+                        //println!("{}:{} {:?}", file!(), line!(), auth_info);
 
                         let tag = auth_info.clone().tag.clone();
                         match hirust_auth::exist(tag.clone()) {
