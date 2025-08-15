@@ -46,7 +46,7 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
     let patterns = r"(\#\s*\[\s*post)|(\#\s*\[\s*macros\s*::\s*post)|(\#\s*\[\s*get)|(\#\s*\[\s*macros\s*::\s*get)|(\#\s*\[\s*put)|(\#\s*\[\s*macros\s*::\s*put)|(\#\s*\[\s*delete)|(\#\s*\[\s*macros\s*::\s*delete)|(\#\s*\[\s*head)|(\#\s*\[\s*macros\s*::\s*head)";
     let re = Regex::new(patterns).unwrap(); // 创建正则表达式对象
 
-    let content = fs::read_to_string(file).expect("Should have been able to read the file");
+    let content = fs::read_to_string(file.clone()).expect("Should have been able to read the file");
 
     // 解析文件内容为 AST
     let syntax: File = parse_file(&content).expect("Not valid Rust code");
@@ -96,8 +96,18 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                     // 函数属性
                     if re.is_match(quote! {#attr}.to_string().as_str()) {
                         //println!("{}:{} {:?}", file!(), line!(), quote! {#attr}.to_string());
-                        let auth_info = utils::parse_auth_info(quote! {#attr});
-                        // println!("{}:{} {:?}", file!(), line!(), auth_info);
+                        let mut auth_info = utils::parse_auth_info(quote! {#attr});
+                        if auth_info.tag.is_empty() {
+                            let file_path = file.clone();
+                            let file_path = file_path
+                                .replace(".rs", "")
+                                .replace("./", "")
+                                .replace("/", "::")
+                                + &"::".to_owned();
+                            let tag = file_path + &fn_name.clone().to_string();
+                            auth_info.tag = tag;
+                        }
+                        println!("{}:{} {:?}", file!(), line!(), auth_info);
 
                         let tag = auth_info.clone().tag.clone();
                         match hirust_auth::exist(tag.clone()) {

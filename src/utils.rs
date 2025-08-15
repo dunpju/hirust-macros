@@ -7,7 +7,6 @@ use std::fs::{File, OpenOptions};
 use std::io;
 use std::io::Write;
 use std::path::Path;
-use quote::quote;
 use zip::ZipArchive;
 
 #[allow(dead_code)]
@@ -321,11 +320,8 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
         }
     }
 
-    if keys.is_empty() {
-        println!("{}:{} {:?}", file!(), line!(), quote! {#args}.to_string());
-        println!("{}:{} {:?}", file!(), line!(), &keys);
-        println!("{}:{} {:?}", file!(), line!(), &values);
-    }
+    //println!("{}:{} {:?}", file!(), line!(), &keys);
+    //println!("{}:{} {:?}", file!(), line!(), &values);
 
     let mut attr_map: HashMap<String, String> = HashMap::new();
     attr_map.insert("method".to_string(), method.to_string());
@@ -350,7 +346,7 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
         panic!("path cannot be empty.");
     }
     if auth_map.get("tag").unwrap().is_empty() {
-        panic!("tag cannot be empty.");
+        //panic!("tag cannot be empty.");
     }
 
     //println!("{}:{} {:?}", file!(), line!(), &auth_map);
