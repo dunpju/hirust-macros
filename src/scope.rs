@@ -1,12 +1,12 @@
+use crate::route_file::route_cfg;
 use crate::utils;
+use crate::utils::create_and_append;
 use proc_macro::{TokenStream, TokenTree};
 use quote::quote;
 use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
 use syn::{File, Item, ItemFn, Stmt, parse_file, parse_macro_input, parse_str};
-use crate::route_file::route_cfg;
-use crate::utils::create_and_append;
 
 pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
     // 解析输入作为ItemFn类型，它是syn 提供的表示函数类型
@@ -138,11 +138,13 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
             for fn_name in fn_name_list.clone() {
                 let fn_name = fn_name.replace("\"", "");
                 let auth_info = auth_info_map.get(&fn_name).unwrap();
-                println!("{}:{} {:?}", file!(), line!(), &auth_info.clone());
-                let auth_info_serialized = serde_json::to_string(&auth_info.clone()).expect("auth_info serialization failed");
+                //println!("{}:{} {:?}", file!(), line!(), &auth_info.clone());
+                let auth_info_serialized = serde_json::to_string(&auth_info.clone())
+                    .expect("auth_info serialization failed");
                 let mut format_str = String::new();
                 if auth_info.clone().middleware.is_empty() {
-                    format_str = format!("let {} = {}.service(web::resource(\"{}\").app_data(r#\"{}\"#.to_string()).route(web::{}().to({})));",
+                    format_str = format!(
+                        "let {} = {}.service(web::resource(\"{}\").app_data(r#\"{}\"#.to_string()).route(web::{}().to({})));",
                         scope_var_name,
                         scope_var_name,
                         auth_info.path,
@@ -151,15 +153,29 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                         fn_name
                     )
                 } else {
-                    format_str = format!("let {} = {}.service(web::resource(\"{}\").app_data(r#\"{}\"#.to_string()).wrap(from_fn({})).route(web::{}().to({})));",
-                        scope_var_name,
-                        scope_var_name,
-                        auth_info.path,
-                        auth_info_serialized,
-                        auth_info.middleware,
-                        auth_info.method,
-                        fn_name
-                    )
+                    let middlewares: Vec<String> = auth_info
+                        .clone()
+                        .middleware
+                        .clone()
+                        .split(",")
+                        .map(|m| m.to_string().replace(" ", ""))
+                        .collect();
+
+                    format_str = format!(
+                        "let {} = {}.service(web::resource(\"{}\").app_data(r#\"{}\"#.to_string())",
+                        scope_var_name, scope_var_name, auth_info.path, auth_info_serialized
+                    );
+
+                    let mut wrap_str = String::new();
+                    for middleware in middlewares {
+                        let temp = format!(".wrap(from_fn({}))", middleware);
+                        wrap_str += &temp;
+                    }
+                    format_str += &wrap_str;
+
+                    let route_str =
+                        format!(".route(web::{}().to({})));", auth_info.method, fn_name);
+                    format_str += &route_str;
                 }
 
                 // 将字符串转换成Stmt
