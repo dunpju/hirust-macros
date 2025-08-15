@@ -20,5 +20,5 @@ serde_json = "1.0.142"
 zip = "4.2.0"
 proc-macro2 = "1.0.95"
 regex = "1.11.1"
-hirust-auth = {path = "../hirust-auth"}
+hirust-auth = "0.1.4"
 
