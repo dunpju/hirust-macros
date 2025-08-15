@@ -4,7 +4,9 @@ use quote::quote;
 use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
-use syn::{File, Item, ItemFn, Stmt, parse_file, parse_macro_input, parse_str, Attribute, parse_quote};
+use syn::{File, Item, ItemFn, Stmt, parse_file, parse_macro_input, parse_str};
+use crate::route_file::route_cfg;
+use crate::utils::create_and_append;
 
 pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
     // 解析输入作为ItemFn类型，它是syn 提供的表示函数类型
@@ -95,7 +97,26 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                     if re.is_match(quote! {#attr}.to_string().as_str()) {
                         println!("{}:{} {:?}", file!(), line!(), quote! {#attr}.to_string());
                         let auth_info = utils::parse_auth_info(quote! {#attr});
-                        //println!("{}:{} {:?}", file!(), line!(), auth_info);
+                        // println!("{}:{} {:?}", file!(), line!(), auth_info);
+
+                        let tag = auth_info.clone().tag.clone();
+                        match hirust_auth::exist(tag.clone()) {
+                            Some(_) => {
+                                panic!("This handler tag: {} is duplication", tag.clone());
+                            }
+                            None => {
+                                let route_cfg = route_cfg();
+                                if route_cfg.is_empty() {
+                                    panic!(
+                                        "file: {}, line: {}, message: route config is empty, please check the route configuration path and compilation order.",
+                                        file!(),
+                                        line!()
+                                    );
+                                }
+                                let serialized = serde_json::to_string(&auth_info.clone()).unwrap();
+                                create_and_append(route_cfg.as_str(), &serialized.as_str());
+                            }
+                        }
                         auth_info_map.insert(fn_name.clone().to_string(), auth_info.clone());
                         fn_name_list.push(fn_name.to_string());
                         break;
@@ -117,22 +138,21 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
             for fn_name in fn_name_list.clone() {
                 let fn_name = fn_name.replace("\"", "");
                 let auth_info = auth_info_map.get(&fn_name).unwrap();
-                println!("{}:{} {:?}", file!(), line!(), auth_info.clone());
-                let auth_info_serialized = serde_json::to_string(&auth_info).expect("auth_info serialization failed");
-                // println!("{}", format!(
-                //     "let {} = {}.service(web::resource({}).app_data(hirust_auth::Auth{}).wrap(from_fn({})).route(web::{}().to({})));",
-                //     scope_var_name,
-                //     scope_var_name,
-                //     auth_info.path,
-                //     auth_info_serialized,
-                //     auth_info.middleware,
-                //     auth_info.method,
-                //     fn_name
-                // ).as_str());
-                // 将字符串转换成Stmt
-                let stmt = parse_str::<Stmt>(
-                    format!(
-                        "let {} = {}.service(web::resource({}).app_data(hirust_auth::Auth{}).wrap(from_fn({})).route(web::{}().to({})));",
+                println!("{}:{} {:?}", file!(), line!(), &auth_info.clone());
+                let auth_info_serialized = serde_json::to_string(&auth_info.clone()).expect("auth_info serialization failed");
+                let mut format_str = String::new();
+                if auth_info.clone().middleware.is_empty() {
+                    format_str = format!(
+                        "let {} = {}.service(web::resource(\"{}\").app_data(r#\"{}\"#.to_string()).route(web::{}().to({})));",
+                        scope_var_name,
+                        scope_var_name,
+                        auth_info.path,
+                        auth_info_serialized,
+                        auth_info.method,
+                        fn_name
+                    )
+                } else {
+                    format_str = format!("let {} = {}.service(web::resource(\"{}\").app_data(r#\"{}\"#.to_string()).wrap(from_fn({})).route(web::{}().to({})));",
                         scope_var_name,
                         scope_var_name,
                         auth_info.path,
@@ -141,9 +161,10 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                         auth_info.method,
                         fn_name
                     )
-                    .as_str(),
-                )
-                .unwrap();
+                }
+
+                // 将字符串转换成Stmt
+                let stmt = parse_str::<Stmt>(format_str.as_str()).unwrap();
                 new_statements.push(stmt.clone());
             }
         }

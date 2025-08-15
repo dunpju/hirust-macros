@@ -7,6 +7,7 @@ use std::fs::{File, OpenOptions};
 use std::io;
 use std::io::Write;
 use std::path::Path;
+use quote::quote;
 use zip::ZipArchive;
 
 #[allow(dead_code)]
@@ -93,7 +94,7 @@ pub fn extract_zip(zip_path: &str, extract_to: &str) -> io::Result<()> {
 
 #[allow(unused)]
 pub fn parse_token(args: TokenStream, req_map: HashMap<String, String>) -> (String, String) {
-    let auth_info = parse_auth_info(proc_macro2::TokenStream::from(args));
+    let auth_info = parse_attr(args);
 
     let path = auth_info.clone().path.clone();
     let tag = auth_info.clone().tag.clone();
@@ -182,7 +183,7 @@ pub fn parse_attr(args: TokenStream) -> hirust_auth::Auth {
     let mut is_desc = false;
     let mut desc = String::new();
     for arg in args.into_iter() {
-        println!("{}:{} {:?}", file!(), line!(), &arg);
+        //println!("{}:{} {:?}", file!(), line!(), &arg);
         if matches!(&arg, TokenTree::Ident(_)) && "method".eq(&arg.to_string()) {
             is_method = true;
         }
@@ -254,7 +255,6 @@ pub fn parse_attr(args: TokenStream) -> hirust_auth::Auth {
 
 #[allow(unused)]
 pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
-    println!("{}:{} {:?}", file!(), line!(), &args);
     let mut method = String::new();
 
     let serialized = serde_json::to_string(&hirust_auth::Auth::default())
@@ -270,7 +270,7 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
     let mut keys: Vec<String> = vec![];
     let mut values: Vec<String> = vec![];
 
-    for arg in args.into_iter() {
+    for arg in args.clone().into_iter() {
         match arg {
             // 遍历TokenTree::Group下的TokenStream
             proc_macro2::TokenTree::Group(ref group) => {
@@ -283,6 +283,7 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
                         proc_macro2::TokenTree::Ident(ref ident) => {
                             //println!("{}:{} {:?}", file!(), line!(), &ident);
                             method = ident.clone().to_string().replace("\"", "");
+                            //println!("{}:{} {:?}", file!(), line!(), &method);
                         }
                         proc_macro2::TokenTree::Group(ref group) => {
                             //println!("{}:{} {:?}", file!(), line!(), &group);
@@ -320,8 +321,11 @@ pub fn parse_auth_info(args: proc_macro2::TokenStream) -> hirust_auth::Auth {
         }
     }
 
-    //println!("{}:{} {:?}", file!(), line!(), &keys);
-    //println!("{}:{} {:?}", file!(), line!(), &values);
+    if keys.is_empty() {
+        println!("{}:{} {:?}", file!(), line!(), quote! {#args}.to_string());
+        println!("{}:{} {:?}", file!(), line!(), &keys);
+        println!("{}:{} {:?}", file!(), line!(), &values);
+    }
 
     let mut attr_map: HashMap<String, String> = HashMap::new();
     attr_map.insert("method".to_string(), method.to_string());

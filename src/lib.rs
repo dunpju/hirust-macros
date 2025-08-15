@@ -12,11 +12,6 @@ mod scope;
 mod tag;
 mod utils;
 
-use crate::delete::delete_impl;
-use crate::get::get_impl;
-use crate::head::head_impl;
-use crate::post::post_impl;
-use crate::put::put_impl;
 use crate::route_file::route_file_impl;
 use crate::tag::tag_impl;
 use auth_file::auth_file_impl;
@@ -79,26 +74,31 @@ pub fn tag(args: TokenStream, item: TokenStream) -> TokenStream {
 
 // https://rust.biofan.org/crates/attributes.html
 #[proc_macro_attribute]
-pub fn post(args: TokenStream, item: TokenStream) -> TokenStream {
-    post_impl(args, item)
+pub fn post(_args: TokenStream, item: TokenStream) -> TokenStream {
+    //post_impl(args, item)
+    item
 }
 
 #[proc_macro_attribute]
-pub fn get(args: TokenStream, item: TokenStream) -> TokenStream {
-    get_impl(args, item)
+pub fn get(_args: TokenStream, item: TokenStream) -> TokenStream {
+    //get_impl(args, item)
+    item
 }
 
 #[proc_macro_attribute]
-pub fn put(args: TokenStream, item: TokenStream) -> TokenStream {
-    put_impl(args, item)
+pub fn put(_args: TokenStream, item: TokenStream) -> TokenStream {
+    //put_impl(args, item)
+    item
 }
 
 #[proc_macro_attribute]
-pub fn delete(args: TokenStream, item: TokenStream) -> TokenStream {
-    delete_impl(args, item)
+pub fn delete(_args: TokenStream, item: TokenStream) -> TokenStream {
+    //delete_impl(args, item)
+    item
 }
 
 #[proc_macro_attribute]
-pub fn head(args: TokenStream, item: TokenStream) -> TokenStream {
-    head_impl(args, item)
+pub fn head(_args: TokenStream, item: TokenStream) -> TokenStream {
+    //head_impl(args, item)
+    item
 }

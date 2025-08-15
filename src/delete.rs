@@ -1,9 +1,9 @@
-use crate::utils;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, ItemFn};
 
-pub(crate) fn delete_impl(args: TokenStream, input: TokenStream) -> TokenStream {
+#[allow(dead_code)]
+pub(crate) fn delete_impl(_args: TokenStream, input: TokenStream) -> TokenStream {
     // 解析输入作为ItemFn类型，它是syn 提供的表示函数类型
     let input = parse_macro_input!(input as ItemFn);
 
@@ -18,10 +18,10 @@ pub(crate) fn delete_impl(args: TokenStream, input: TokenStream) -> TokenStream 
         attrs,
     } = input;
 
-    let tokens = quote!(#sig);
-    let req_map = utils::parse_group_extract_args(tokens);
+    //let tokens = quote!(#sig);
+    //let req_map = utils::parse_group_extract_args(tokens);
     
-    let (_path, _contents) = utils::parse_token(args, req_map);
+    //let (_path, _contents) = utils::parse_token(args, req_map);
 
     // 将字符串解析为Rust代码片段
     //let middleware_expr = parse_str::<syn::Expr>(contents.as_str()).unwrap();
