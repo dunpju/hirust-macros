@@ -95,7 +95,7 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 for attr in &attrs {
                     // 函数属性
                     if re.is_match(quote! {#attr}.to_string().as_str()) {
-                        println!("{}:{} {:?}", file!(), line!(), quote! {#attr}.to_string());
+                        //println!("{}:{} {:?}", file!(), line!(), quote! {#attr}.to_string());
                         let auth_info = utils::parse_auth_info(quote! {#attr});
                         // println!("{}:{} {:?}", file!(), line!(), auth_info);
 
@@ -141,9 +141,9 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                 //println!("{}:{} {:?}", file!(), line!(), &auth_info.clone());
                 let auth_info_serialized = serde_json::to_string(&auth_info.clone())
                     .expect("auth_info serialization failed");
-                let mut format_str = String::new();
+
                 if auth_info.clone().middleware.is_empty() {
-                    format_str = format!(
+                    let format_str = format!(
                         "let {} = {}.service(web::resource(\"{}\").app_data(r#\"{}\"#.to_string()).route(web::{}().to({})));",
                         scope_var_name,
                         scope_var_name,
@@ -151,7 +151,10 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                         auth_info_serialized,
                         auth_info.method,
                         fn_name
-                    )
+                    );
+                    // 将字符串转换成Stmt
+                    let stmt = parse_str::<Stmt>(format_str.as_str()).unwrap();
+                    new_statements.push(stmt.clone());
                 } else {
                     let middlewares: Vec<String> = auth_info
                         .clone()
@@ -161,7 +164,7 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                         .map(|m| m.to_string().replace(" ", ""))
                         .collect();
 
-                    format_str = format!(
+                    let mut format_str = format!(
                         "let {} = {}.service(web::resource(\"{}\").app_data(r#\"{}\"#.to_string())",
                         scope_var_name, scope_var_name, auth_info.path, auth_info_serialized
                     );
@@ -176,11 +179,11 @@ pub(crate) fn scope_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                     let route_str =
                         format!(".route(web::{}().to({})));", auth_info.method, fn_name);
                     format_str += &route_str;
-                }
 
-                // 将字符串转换成Stmt
-                let stmt = parse_str::<Stmt>(format_str.as_str()).unwrap();
-                new_statements.push(stmt.clone());
+                    // 将字符串转换成Stmt
+                    let stmt = parse_str::<Stmt>(format_str.as_str()).unwrap();
+                    new_statements.push(stmt.clone());
+                }
             }
         }
         i += 1;
